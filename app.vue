@@ -9,7 +9,7 @@
 import { ref, onMounted } from 'vue'
 import Dashboard from './components/Dashboard.vue'
 
-const isDarkMode = ref(false)
+const isDarkMode = ref(true)
 
 useHead({
   bodyAttrs: {
@@ -18,10 +18,17 @@ useHead({
 })
 
 onMounted(() => {
-  const isDark = localStorage.getItem('darkMode') === 'true'
-  isDarkMode.value = isDark
-  if (isDark) {
+  const savedMode = localStorage.getItem('darkMode')
+  if (savedMode !== null) {
+    isDarkMode.value = savedMode === 'true'
+  } else {
+    isDarkMode.value = true
+  }
+
+  if (isDarkMode.value) {
     document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
   }
 })
 
