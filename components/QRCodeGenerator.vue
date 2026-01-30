@@ -1,66 +1,94 @@
 <template>
-  <div class="qr-container">
-    <h1>QR Code Generator</h1>
-    
-    <div class="form-group">
-      <div class="input-section">
-        <h2>Tạo QR Code từ URL</h2>
-        
-        <!-- URL Input -->
-        <div class="input-field">
-          <label for="url-input">URL:</label>
-          <input 
-            id="url-input"
-            v-model="urlInput" 
-            type="text" 
-            placeholder="http://m.me/sunshinetelecomvn"
-          >
-          <button @click="generateQR" class="btn btn-primary">
-            Tạo QR Code
-          </button>
-        </div>
+  <div class="bg-gray-100 dark:bg-gray-900 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Header -->
+      <header class="flex justify-between items-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 dark:text-white">
+          QR Code Generator
+        </h1>
+        <button @click="$emit('toggle-dark-mode')" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+          <svg v-if="props.isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+      </header>
 
-        <!-- Logo Upload -->
-        <div class="input-field">
-          <label for="logo-upload">Upload Logo (PNG/JPG):</label>
-          <input 
-            id="logo-upload"
-            type="file" 
-            accept="image/png,image/jpeg"
-            @change="handleLogoUpload"
-          >
-          <span v-if="logoFile" class="logo-name">{{ logoFile.name }}</span>
-        </div>
+      <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Form Section -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-6">Tạo QR Code</h2>
 
-        <!-- QR Size Selection -->
-        <div class="input-field">
-          <label for="qr-size">Kích thước QR Code:</label>
-          <select v-model.number="qrSize" id="qr-size">
-            <option :value="1920">1920px (HD)</option>
-            <option :value="2560">2560px (1440p)</option>
-            <option :value="3840">3840px (4K)</option>
-            <option :value="5120">5120px (5K)</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- QR Code Display -->
-      <div class="qr-display">
-        <div v-if="qrGenerated" class="qr-item">
-          <h3>QR Code</h3>
-          <div class="qr-canvas-wrapper">
-            <img :src="qrImage" alt="QR Code" class="qr-image">
+          <!-- URL Input -->
+          <div class="mb-4">
+            <label for="url-input" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">URL</label>
+            <input id="url-input" v-model="urlInput" type="text" placeholder="http://m.me/sunshinetelecomvn" class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
           </div>
-          <button @click="downloadQR" class="btn btn-success">
-            Download QR Code
+
+          <!-- Logo Upload -->
+          <div class="mb-4">
+            <label for="logo-upload" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Upload Logo (PNG/JPG)</label>
+            <div class="flex items-center">
+              <label for="logo-upload" class="cursor-pointer bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md transition-colors">
+                Chọn file
+              </label>
+              <input id="logo-upload" type="file" accept="image/png,image/jpeg" @change="handleLogoUpload" class="hidden">
+              <span v-if="logoFile" class="ml-3 text-sm text-gray-500 dark:text-gray-400">{{ logoFile.name }}</span>
+            </div>
+          </div>
+          
+          <!-- QR Size -->
+          <div class="mb-6">
+            <label for="qr-size" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Kích thước QR Code</label>
+            <select v-model.number="qrSize" id="qr-size" class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+              <option :value="1920">1920px (HD)</option>
+              <option :value="2560">2560px (1440p)</option>
+              <option :value="3840">3840px (4K)</option>
+              <option :value="5120">5120px (5K)</option>
+            </select>
+          </div>
+
+          <button @click="generateQR" :disabled="isLoading" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed flex items-center justify-center">
+            <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isLoading ? 'Đang tạo...' : 'Tạo QR Code' }}
           </button>
         </div>
-      </div>
-    </div>
 
-    <!-- Error Message -->
-    <div v-if="errorMessage" class="error-message">
-      {{ errorMessage }}
+        <!-- QR Code Display -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col items-center justify-center min-h-[400px]">
+          <div v-if="qrGenerated" class="flex flex-col items-center">
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">QR Code của bạn</h3>
+            <div class="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg inline-block">
+                <img :src="qrImage" alt="QR Code" class="max-w-xs mx-auto rounded-md shadow-md">
+            </div>
+            <button @click="downloadQR" class="mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-md transition-colors">
+              Download QR Code
+            </button>
+          </div>
+          <div v-else class="text-center text-gray-500 dark:text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
+            </svg>
+            <p class="mt-2">QR Code sẽ được hiển thị ở đây</p>
+          </div>
+        </div>
+      </main>
+
+      <!-- Error Message -->
+      <div v-if="errorMessage" class="mt-8 bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg relative" role="alert">
+        <strong class="font-bold">Lỗi:</strong>
+        <span class="block sm:inline">{{ errorMessage }}</span>
+      </div>
+
+      <!-- Footer -->
+      <footer class="text-center text-gray-500 dark:text-gray-400 mt-12">
+        <p>Author by Tich LE</p>
+      </footer>
     </div>
   </div>
 </template>
@@ -69,6 +97,12 @@
 import { ref } from 'vue'
 import QRCode from 'qrcode'
 
+const props = defineProps<{
+  isDarkMode: boolean
+}>()
+
+defineEmits(['toggle-dark-mode'])
+
 const urlInput = ref('http://m.me/sunshinetelecomvn')
 const qrSize = ref(3840)
 const logoFile = ref<File | null>(null)
@@ -76,6 +110,7 @@ const qrImage = ref<string>('')
 const qrGenerated = ref(false)
 const errorMessage = ref('')
 const logoDataUrl = ref<string | null>(null)
+const isLoading = ref(false)
 
 const handleLogoUpload = (event: Event) => {
   const input = event.target as HTMLInputElement
@@ -97,9 +132,10 @@ const generateQR = async () => {
     return
   }
 
+  isLoading.value = true
+  errorMessage.value = ''
+  
   try {
-    errorMessage.value = ''
-    
     let qrDataUrl = await QRCode.toDataURL(urlInput.value, {
       errorCorrectionLevel: 'H',
       type: 'image/png',
@@ -107,8 +143,8 @@ const generateQR = async () => {
       margin: 1,
       width: qrSize.value,
       color: {
-        dark: '#000000',
-        light: '#FFFFFF'
+        dark: props.isDarkMode ? '#FFFFFF' : '#000000',
+        light: props.isDarkMode ? '#111827' : '#FFFFFF'
       }
     })
 
@@ -121,49 +157,46 @@ const generateQR = async () => {
   } catch (error) {
     errorMessage.value = `Error: ${error}`
     console.error(error)
+  } finally {
+    isLoading.value = false
   }
 }
 
-const addLogoToQR = (qrDataUrl: string, logoDataUrl: string): Promise<string> => {
+const addLogoToQR = (qrDataUrl: string, logoUrl: string): Promise<string> => {
   return new Promise((resolve, reject) => {
-    try {
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        reject('Cannot get canvas context')
-        return
-      }
-
-      canvas.width = qrSize.value
-      canvas.height = qrSize.value
-
-      const qrImg = new Image()
-      qrImg.onload = () => {
-        ctx.drawImage(qrImg, 0, 0)
-
-        const logoImg = new Image()
-        logoImg.onload = () => {
-          const logoSize = qrSize.value / 4
-          const x = (qrSize.value - logoSize) / 2
-          const y = (qrSize.value - logoSize) / 2
-
-          ctx.fillStyle = 'white'
-          ctx.beginPath()
-          ctx.arc(x + logoSize / 2, y + logoSize / 2, (logoSize / 2) + 10, 0, Math.PI * 2)
-          ctx.fill()
-
-          ctx.drawImage(logoImg, x, y, logoSize, logoSize)
-
-          resolve(canvas.toDataURL('image/png'))
-        }
-        logoImg.onerror = () => reject('Failed to load logo')
-        logoImg.src = logoDataUrl
-      }
-      qrImg.onerror = () => reject('Failed to load QR code')
-      qrImg.src = qrDataUrl
-    } catch (error) {
-      reject(error)
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      return reject('Could not get canvas context')
     }
+    
+    canvas.width = qrSize.value
+    canvas.height = qrSize.value
+
+    const qrImg = new Image()
+    qrImg.onload = () => {
+      ctx.drawImage(qrImg, 0, 0)
+
+      const logoImg = new Image()
+      logoImg.onload = () => {
+        const logoSize = qrSize.value * 0.25
+        const x = (qrSize.value - logoSize) / 2
+        const y = (qrSize.value - logoSize) / 2
+
+        // Add a background behind the logo for better visibility
+        ctx.fillStyle = '#FFFFFF'
+        ctx.beginPath();
+        ctx.arc(x + logoSize / 2, y + logoSize / 2, logoSize / 2 + 5, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.drawImage(logoImg, x, y, logoSize, logoSize)
+        resolve(canvas.toDataURL('image/png'))
+      }
+      logoImg.onerror = reject
+      logoImg.src = logoUrl
+    }
+    qrImg.onerror = reject
+    qrImg.src = qrDataUrl
   })
 }
 
@@ -178,177 +211,3 @@ const downloadQR = () => {
   document.body.removeChild(link)
 }
 </script>
-
-<style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.qr-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-}
-
-h1 {
-  text-align: center;
-  color: white;
-  margin-bottom: 40px;
-  font-size: 2.5em;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.form-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-bottom: 30px;
-}
-
-@media (max-width: 1024px) {
-  .form-group {
-    grid-template-columns: 1fr;
-  }
-}
-
-.input-section {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.input-section h2 {
-  color: #333;
-  margin-bottom: 20px;
-  font-size: 1.5em;
-}
-
-.input-field {
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-label {
-  font-weight: 600;
-  color: #555;
-  font-size: 0.95em;
-}
-
-input[type="text"],
-input[type="file"],
-select {
-  padding: 12px 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 1em;
-  transition: border-color 0.3s;
-}
-
-input[type="text"]:focus,
-input[type="file"]:focus,
-select:focus {
-  outline: none;
-  border-color: #667eea;
-  background-color: #f8f9ff;
-}
-
-.logo-name {
-  color: #667eea;
-  font-weight: 500;
-  font-size: 0.9em;
-}
-
-.btn {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-primary {
-  background-color: #667eea;
-  color: white;
-  width: 100%;
-}
-
-.btn-primary:hover {
-  background-color: #5568d3;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.btn-success {
-  background-color: #10b981;
-  color: white;
-  width: 100%;
-}
-
-.btn-success:hover {
-  background-color: #059669;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-}
-
-.qr-display {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.qr-item {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-.qr-item h3 {
-  color: #333;
-  font-size: 1.3em;
-  width: 100%;
-}
-
-.qr-canvas-wrapper {
-  background: white;
-  padding: 20px;
-  border: 2px dashed #e0e0e0;
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-}
-
-.qr-image {
-  max-width: 100%;
-  max-height: 400px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.error-message {
-  background-color: #fee;
-  color: #c33;
-  padding: 15px 20px;
-  border-radius: 6px;
-  border-left: 4px solid #c33;
-  font-weight: 500;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-</style>
