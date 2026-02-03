@@ -1,16 +1,60 @@
 <template>
   <div class="relative">
     <NuxtRouteAnnouncer />
-    <NuxtPage />
+    <Dashboard 
+      :is-dark-mode="isDarkMode"
+      :user-email="userEmail || ''"
+      @toggle-dark-mode="toggleDarkMode"
+      @logout="handleLogout"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import Dashboard from '../components/Dashboard.vue'
+
+// Không cần middleware vì pages/index.vue đã check
+const isDarkMode = ref(true)
+const userEmail = useState<string | null>('userEmail', () => null)
+
 useHead({
   bodyAttrs: {
     class: 'bg-gray-100 dark:bg-gray-900 transition-colors duration-300'
   }
 })
+
+onMounted(() => {
+  // Đọc dark mode từ localStorage
+  const savedMode = localStorage.getItem('darkMode')
+  if (savedMode !== null) {
+    isDarkMode.value = savedMode === 'true'
+  } else {
+    isDarkMode.value = true
+  }
+
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+})
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value
+  localStorage.setItem('darkMode', isDarkMode.value.toString())
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+}
+
+const handleLogout = () => {
+  userEmail.value = null
+  localStorage.removeItem('userEmail')
+  navigateTo('/login')
+}
 </script>
 
 <style>
@@ -99,5 +143,3 @@ useHead({
   font-weight: bold;
 }
 </style>
-
-

@@ -4,6 +4,12 @@
     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg rgb-led-subtle">
       <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-6">⚙️ Tạo QR Code</h3>
 
+      <!-- Gmail Input -->
+      <div class="mb-4">
+        <label for="gmail-input" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">✉️ Gmail</label>
+        <input id="gmail-input" v-model="gmailInput" type="email" placeholder="your.email@gmail.com" class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+      </div>
+
       <!-- URL Input -->
       <div class="mb-4">
         <label for="url-input" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">📝 URL</label>
@@ -72,6 +78,7 @@ defineProps<{
   isDarkMode: boolean
 }>()
 
+const gmailInput = ref('')
 const urlInput = ref('http://m.me/sunshinetelecomvn')
 const qrSize = ref(3840)
 const logoFile = ref<File | null>(null)
@@ -96,6 +103,11 @@ const handleLogoUpload = (event: Event) => {
 }
 
 const generateQR = async () => {
+  if (!gmailInput.value.trim()) {
+    errorMessage.value = 'Vui lòng nhập Gmail'
+    return
+  }
+
   if (!urlInput.value.trim()) {
     errorMessage.value = 'Vui lòng nhập URL'
     return
@@ -123,6 +135,9 @@ const generateQR = async () => {
 
     qrImage.value = qrDataUrl
     qrGenerated.value = true
+
+    // Lưu dữ liệu vào MongoDB
+    await saveQRCodeToDatabase(qrDataUrl)
   } catch (error) {
     errorMessage.value = `Error: ${error}`
     console.error(error)
@@ -177,5 +192,32 @@ const downloadQR = () => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+}
+
+const saveQRCodeToDatabase = async (qrDataUrl: string) => {
+  try {
+    const response = await fetch('/api/qrcode', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        gmail: gmailInput.value,
+        url: urlInput.value,
+        qrCode: qrDataUrl,
+      }),
+    })
+
+    const data = await response.json()
+    if (!response.ok) {
+      console.error('Error saving QR code:', data)
+      errorMessage.value = 'Lưu dữ liệu thất bại'
+    } else {
+      console.log('QR code saved successfully:', data)
+    }
+  } catch (error) {
+    console.error('Error saving QR code to database:', error)
+    errorMessage.value = 'Lưu dữ liệu thất bại'
+  }
 }
 </script>

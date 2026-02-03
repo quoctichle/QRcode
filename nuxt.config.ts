@@ -4,4 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/css/main.css'],
+  runtimeConfig: {
+    mongodbUri: process.env.NUXT_MONGODB_URI || process.env.MONGODB_URI || '',
+  },
 })
